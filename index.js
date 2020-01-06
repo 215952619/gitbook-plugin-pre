@@ -1,34 +1,36 @@
 module.exports = {
-    book: {
-        assets: './assets',
-        css: ['index.css']
-    },
     blocks: {
-        em: {
+        pre: {
             process: function(block) {
-                let { pre, type, color, style } = block.kwargs
-                let realColor = color ? 'background: ' + color + ';' : ''
-                let realStyle = style ? style + realColor : realColor
+                let kwargs = block.kwargs
+                let ignoreArgs = ['_tag', '__keywords']
 
-                if (pre === 'pre') {
-                    var body = '<span>{% em'
-                    body = type ? body + ' type="' + type + '"' : body
-                    body = color ? body + ' color="' + color + '"' : body
-                    body = style ? body + ' style="' + style + '"' : body
-                    body = body + ' %}' + block.body + '{% endem %}</span>'
+                if (kwargs['_tag']) {
+                    let body = `<span>{% ${kwargs['_tag']}`
 
+                    body =
+                        body +
+                        Object.keys(kwargs)
+                            .map(item => {
+                                if (!ignoreArgs.includes(item)) {
+                                    if (item === 'pre_tag') {
+                                        return ` _tag="${kwargs[item]}"`
+                                    }
+                                    return ` ${item}="${kwargs[item]}"`
+                                }
+                                return undefined
+                            })
+                            .filter(item => item !== undefined)
+                            .join(',')
+
+                    body = body + ` %}${block.body}{% end${kwargs['_tag']} %}</span>`
                     return {
                         body: body,
                         parse: false
                     }
                 } else {
-                    var body = '<span class="pg-emphasize '
-                    body = type ? body + ' pg-emphasize-' + type + '"' : body + '"'
-                    body = realStyle ? body + ' style="' + realStyle + '"' : body
-                    body = body + '>' + block.body + '</span>'
-
                     return {
-                        body: body,
+                        body: block.body,
                         parse: true
                     }
                 }
